@@ -1,6 +1,6 @@
 # Polygenic_Risk_Score_Tutorial
-This repo contains files and codes for GWAS_PRS analysis.
 
-The file named part 1, contains codes for assessing the gene expression correlation with some other covariates (such as Age, Sex, Cohort, Cell type proportion, Polygenic_Risk_Scores, etc.). Here, the Common Mind dataset is use. 
+This repo contains descriptive files and codes for constrcuting poly genic risk scores. The folders contents are as follows: 
 
-The next scripts will expalin how to calculate PR scores as well as specfic cell types proportions from Brain tissue GWAS and TWAS, respectively. 
+       1- GWA-QC folder: the steps to quality control whole genome sequencing (WGS) data are explained GWA-QC folder. 
+
