@@ -155,52 +155,51 @@ $ plink --memory 128000 --bfile GTEX_BA9_White_7_hwe_filter_step1 --hwe 1e-10 --
 
 # The parameters ‘50 5 0.2’ stand respectively for: the window size, the number of SNPs to shift the window at each step, and the multiple correlation coefficient for a SNP being regressed on all other SNPs simultaneously.
 
-plink --memory 128000 --bfile GTEX_BA9_White_8 --exclude inversion.txt --range --indep-pairwise 50 5 0.2 --out indepSNP
+$ plink --memory 128000 --bfile GTEX_BA9_White_8 --exclude inversion.txt --range --indep-pairwise 50 5 0.2 --out indepSNP
 
 # Note, don't delete the file indepSNP.prune.in, we will use this file in later steps of the tutorial.
 
-plink --memory 128000 --bfile GTEX_BA9_White_8 --extract indepSNP.prune.in --het --out R_check
+$ plink --memory 128000 --bfile GTEX_BA9_White_8 --extract indepSNP.prune.in --het --out R_check
 # This file contains your pruned data set.
 
 # Plot of the heterozygosity rate distribution
-Rscript --no-save check_heterozygosity_rate.R
+$Rscript --no-save check_heterozygosity_rate.R
 
 # The following code generates a list of individuals who deviate more than 3 standard deviations from the heterozygosity rate mean.
 # For data manipulation we recommend using UNIX. However, when performing statistical calculations R might be more convenient, hence the use of the Rscript for this step:
-Rscript --no-save heterozygosity_outliers_list.R
+$ Rscript --no-save heterozygosity_outliers_list.R
 
 # Output of the command above: fail-het-qc.txt .
 # When using our example data/the GTex data this list contains 1 individual (i.e., two individuals have a heterozygosity rate deviating more than 3 SD's from the mean).
 # Adapt this file to make it compatible for PLINK, by removing all quotation marks from the file and selecting only the first two columns.
-sed 's/"// g' fail-het-qc.txt | awk '{print$1, $2}'> het_fail_ind.txt
+$ sed 's/"// g' fail-het-qc.txt | awk '{print$1, $2}'> het_fail_ind.txt
 
 # Remove heterozygosity rate outliers.
-plink --memory 128000 --bfile GTEX_BA9_White_8 --remove het_fail_ind.txt --make-bed --out GTEX_BA9_White_9
+$ plink --memory 128000 --bfile GTEX_BA9_White_8 --remove het_fail_ind.txt --make-bed --out GTEX_BA9_White_9
 
 ################################################################################
 ### step 6) It is essential to check datasets you analyse for cryptic relatedness.
-# Assuming a random population sample we are going to exclude all individuals 
-above the pihat threshold of 0.2 in this tutorial.
+# Assuming a random population sample we are going to exclude all individuals above the pihat threshold of 0.2 in this tutorial.
 
 # Check for relationships between individuals with a pihat > 0.2.
-plink --memory 128000 --bfile GTEX_BA9_White_9 --extract indepSNP.prune.in --genome --min 0.2 --out pihat_min0.2
+$ plink --memory 128000 --bfile GTEX_BA9_White_9 --extract indepSNP.prune.in --genome --min 0.2 --out pihat_min0.2
 
 # The HapMap dataset is known to contain parent-offspring relations. 
 # The following commands will visualize specifically these parent-offspring relations, using the z values. 
-awk '{ if ($8 >0.9) print $0 }' pihat_min0.2.genome>zoom_pihat.genome
+$ awk '{ if ($8 >0.9) print $0 }' pihat_min0.2.genome>zoom_pihat.genome
 
 # Generate a plot to assess the type of relationship.
-Rscript --no-save Relatedness.R
+$ Rscript --no-save Relatedness.R
 
 # The generated plots show no considerable amount of related individuals (explentation plot; PO = parent-offspring, UN = unrelated individuals) in the GTEX data, this is expected since the dataset was constructed as such.
 # Normally, family based data should be analyzed using specific family based methods. In this tutorial, for demonstrative purposes, we treat the relatedness as cryptic relatedness in a random population sample.
 # In this tutorial, we aim to remove all 'relatedness' from our dataset.
 # To demonstrate that the majority of the relatedness was due to parent-offspring we only include founders (individuals without parents in the dataset).
 
-plink --bfile GTEX_BA9_White_9 --filter-founders --make-bed --out GTEX_BA9_White_10
+$ plink --bfile GTEX_BA9_White_9 --filter-founders --make-bed --out GTEX_BA9_White_10
 
 # Now we will look again for individuals with a pihat >0.2.
-plink --bfile GTEX_BA9_White_10 --extract indepSNP.prune.in --genome --min 0.2 --out pihat_min0.2_in_founders
+$ plink --bfile GTEX_BA9_White_10 --extract indepSNP.prune.in --genome --min 0.2 --out pihat_min0.2_in_founders
 
 
 
@@ -209,7 +208,7 @@ plink --bfile GTEX_BA9_White_10 --extract indepSNP.prune.in --genome --min 0.2 -
 # This is likely to be a full sib or DZ twin pair based on the Z values. Noteworthy, they were not given the same family identity (FID) in the HapMap data.
 
 # For each pair of 'related' individuals with a pihat > 0.2, we recommend to remove the individual with the lowest call rate. 
-plink --bfile GTEX_BA9_White_10 --missing
+$ plink --bfile GTEX_BA9_White_10 --missing
 
 # Use an UNIX text editor (e.g., vi(m) ) to check which individual has the highest call rate in the 'related pair'. 
 
@@ -224,7 +223,7 @@ i
 # In case of multiple 'related' pairs, the list generated above can be extended using the same method as for our lone 'related' pair.
 
 # Delete the individuals with the lowest call rate in 'related' pairs with a pihat > 0.2 
-plink --bfile GTEX_BA9_White_10 --remove 0.2_low_call_rate_pihat.txt --make-bed --out GTEX_BA9_White_11
+$ plink --bfile GTEX_BA9_White_10 --remove 0.2_low_call_rate_pihat.txt --make-bed --out GTEX_BA9_White_11
 
 
 
