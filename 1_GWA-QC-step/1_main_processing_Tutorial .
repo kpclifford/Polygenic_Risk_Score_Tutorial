@@ -59,7 +59,7 @@ $ plink --vcf GTEx_Analysis_2016-01-15_v7_WholeGenomeSeq_652Ind_GATK_HaplotypeCa
 #SBATCH --output=/external/rprshnas01/netdata_kcni/stlab.../gtex_QC.out
 #SBATCH --error=/external/rprshnas01/netdata_kcni/stlab/.../gtex_QC.err       
 
-$ plink --memory 128000 --bfile GTEX_BA9_White --missing 
+$ plink --memory 128000 --bfile GTEX_BA9_White2 --missing --out FileName  ---> FileName.imiss .lmiss
 
 # output: plink.imiss and plink.lmiss, these files show respectively the proportion of missing SNPs per individual and the proportion of missing individuals per SNP.
 
