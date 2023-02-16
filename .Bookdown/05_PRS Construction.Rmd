@@ -1,0 +1,41 @@
+---
+title: "6_PRS Construction"
+author: "NS"
+date: "2/8/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## PRS construction
+
+The three out put files of *Thresholding.Preparation.R* script 
+
+    1. target_clumped_nothreshold.raw
+    2. target_clumped_nothreshold.snppvalues
+    3. range_list.txt
+    
+will be used in this step. It's easier to copy these three fle to the same folder where the data (i.e., post MIS-QCed-bfiles) are kept. Alternatively, you may define the path to these files in the code below.
+
+```{bash}
+
+# cd to the folder where you keep the final output of imputation step which is cleaned and QCed, for GTeX case it's 
+$ cd /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/6_Post-imputation_QC/5_Final_NoDupSNPs
+
+
+# set the output path
+PRSPATH ="/external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/8_PRS.scores.Results/For.SST"
+
+for i in {1..22}; do
+plink --bfile ann_QCed_chr${i}.UpdatedID --score /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/7_Clumping/For.Thresholding/ForSST/target_clumped_nothreshold.raw --q-score-range range_list.txt  /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/7_Clumping/For.Thresholding/ForSST/target_clumped_nothreshold.snppvalues --out /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/8_PRS.scores.Results/For.SST/out_chr${i}
+done
+
+```
+
+The command above will generate eight output files with extension "*.profile".
+You can merge these results with the phenotype data and analyze the correlation between PRS scores and the phenotype of interest.
+
+
+

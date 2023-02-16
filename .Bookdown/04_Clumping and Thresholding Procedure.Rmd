@@ -1,0 +1,127 @@
+---
+title: "4_Before Clumping Procedure"
+author: "NS"
+date: "2/8/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Clumping Procedure
+
+After performing a genome-wide association study (GWAS) for a given phenotype, an analyst might want to clump the association results based on the correlation between variants and p-values. The goal is to get a list of independent associated loci accounting for linkage disequilibrium between variants.
+
+For example, given a region of the genome with three variants: SNP1, SNP2, and SNP3. SNP1 has a p-value of 1e-8, SNP2 has a p-value of 1e-7, and SNP3 has a p-value of 1e-6. The correlation between SNP1 and SNP2 is 0.95, SNP1 and SNP3 is 0.8, and SNP2 and SNP3 is 0.7. We would want to report SNP1 is the most associated variant with the phenotype and “clump” SNP2 and SNP3 with the association for SNP1.
+
+Linkage disequilibrium, which corresponds to the correlation between the genotypes of genetic variants across the genome, makes identifying the contribution from causal independent genetic variants extremely challenging. One way of approximately capturing the right level of causal signal is to perform clumping, which removes SNPs in ways that only weakly correlated SNPs are retained but preferentially retaining the SNPs most associated with the phenotype under study. Clumping can be performed using plink. 
+
+Following are the steps to prepare data for clumping. 
+
+## Befor Clumping Procedure: 
+
+### *Step 1) Clean up: Remove duplicate SNP IDs*
+
+```{bash}
+
+$ cd /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/6_Post-imputation_QC/4_QCed # where the final outputs of 
+                                             # imputation step are stored
+
+
+# writes all SNP IDs to all_snps.snplist, duplicates occur multiple times; this operation can also be performed with e.g. cut or awk)
+for i in {1..22}; do
+plink --bfile ann_QCed_chr${i} --write-snplist --out all_snps_chr${i}
+done
+
+
+# write the duplicate IDs to duplicated_snps.snplist:
+for i in {1..22}; do
+cat all_snps_chr${i}.snplist | sort | uniq -d > duplicated_snps_chr${i}.snplist 
+done
+
+
+# exclude those duplicate SNP IDs 
+
+for i in {1..22}; do
+plink --bfile ann_QCed_chr${i} --exclude duplicated_snps_chr${i}.snplist --make-bed --out /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/6_Post-imputation_QC/5_Final_NoDupSNPs/ann_QCed_chr${i}.UpdatedID
+done
+
+
+```
+
+
+### *Step 2) prepare the target data*
+```{bash}
+
+#1) First, prepare the target folder (conatining the .bim of all chromosomes)
+$ cd /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/6_Post-imputation_QC/5_Final_NoDupSNPs
+
+
+
+#2) Second, copy .bim (target) files into a new directory 
+
+$ TARGETPATH= "/external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/7_Clumping/targetBim"
+
+$ for i in {1..22}; do
+cat ann_QCed_chr${i}.UpdatedID.bim > $TARGETPATH/target_chr${i}.bim
+done
+
+```
+
+
+### *Step 3) prepare the QCed-summarystat*
+Note: this step is complicated and involves several sub-steps, That's why I kept the codes in a separate script. Please, run the "Sumstat.preparation.R" script to get
+
+    1. sumstat_QCed.txt
+    2. SNPs_P_forclumping.txt
+    
+which will be used for clumping. 
+
+
+## Perform Clumping 
+
+```{bash}
+
+$ cd /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/6_Post-imputation_QC/5_Final_NoDupSNPs
+
+
+$ SUMSTATSPATH= "/external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/7_Clumping/sumstats.QCed"
+
+$ CLUMPPATH= "/external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/7_Clumping/Clumped/Clumped.for.SST"
+
+for i in {1..22}; do
+plink \
+    --bfile ann_QCed_chr${i}.UpdatedID \
+    --clump-p1 1 \
+    --clump-p2 1 \
+    --clump-r2 0.5 \
+    --clump-kb 250 \
+    --clump $SUMSTATSPATH/SST_SNPs_P_forclumping.txt \
+    --out $CLUMPPATH/target_clumped_chr${i}\
+done
+
+# if the above code didn't work try the one below
+
+for i in {1..22}; do 
+plink --bfile ann_QCed_chr${i}.UpdatedID --clump-p1 1 --clump-p2 1 --clump-r2 0.5 --clump-kb 250 --clump /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/7_Clumping/sumstats.QCed/SST_SNPs_P_forclumping.txt --out /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/7_Clumping/Clumped/Clumped.for.SST/target_clumped_chr${i}; 
+done
+
+
+
+```
+
+The command above produces the output **.clumped"**. 
+
+In the commands below, we are combining the SST_sumstat_QCed.txt file (i.e., the base-cleaned-alleles file) with SNPs retained after the clumping step. Please run the "Thresholding.Preparation.R" script to prepare the following files:
+ 
+     1. target_clumped_nothreshold.raw
+     2. target_clumped_nothreshold.snppvalues
+     3. range_list.txt
+
+Then proceed to generate the Polygenic risk scores.
+
+
+
+
+

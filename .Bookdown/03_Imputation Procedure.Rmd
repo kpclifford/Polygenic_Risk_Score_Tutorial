@@ -1,0 +1,278 @@
+---
+title: "03_Imputation"
+author: "NS"
+date: "2/8/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# GWAS data imputation 
+
+Genotype imputation is a process of estimating missing genotypes from the 
+haplotype or genotype reference panel. It can effectively boost the power of 
+detecting single nucleotide polymorphisms (SNPs) in genome-wide association 
+studies (GWAS). It's widely used in GWASs to find novel risk alleles or do
+fine-mapping to get a high-resolution view of the likelihood of identified 
+causal variants.
+
+Michigan Imputation Server (<https://imputationserver.readthedocs.io/en/latest/>)
+is a web-based tool for genotype imputation using Minimac4. You can upload phased 
+or unphased GWAS genotypes and receive phased and imputed genomes in return. 
+This server offers imputation from 1000 Genomes (Phase 1 and 3), CAAPA, HRC and 
+the TOPMed reference panel. I used the HRC (Version r1.1 2016) Reference Panel. The HRC panel consists of 64,940 haplotypes of predominantly European ancestry. 
+
+This process involves several steps that are explained down below.
+
+## Pipeline Overview 
+
+### Before Imputation Steps
+
+### *A. Data Preparation for Reference Panel Genotype Data* 
+
+```{bash}
+
+# step 1) Download Haplotype calls from "The Haplotype Reference Consortium" at  <http://www.haplotype-reference-consortium.org/site>
+
+$ wget ftp://ngs.sanger.ac.uk/production/hrc/HRC.r1-1/HRC.r1-1.GRCh37.wgs.mac5.sites.vcf.gz
+
+$ wget ftp://ngs.sanger.ac.uk/production/hrc/HRC.r1-1/HRC.r1-1.GRCh37.wgs.mac5.sites.tab.gz
+
+A README file that describes the contents of these files is available here: 
+$ wget ftp://ngs.sanger.ac.uk/production/hrc/HRC.r1-1/README
+ 
+# unzip the files as shown below
+$ gzip -d HRC.r1-1.GRCh37.wgs.mac5.sites.tab.gz
+
+
+
+# step 2) 1000G reference panel is needed for calculating Allele frequency; 
+# you may find it at: <https://www.well.ox.ac.uk/~wrayner/tools/>
+$ wget https://www.well.ox.ac.uk/~wrayner/tools/HRC-1000G-check-bim-v4.3.0.zip
+
+# unzip the files as shown below
+$ unzip HRC-1000G-check-bim-v4.3.0.zip 
+
+```
+
+
+### *B. Create a frequency file for your WGS data*
+
+Note, you are going to perform this step on the the QCed data you generated 
+at the end of chapter 2. Here, in the case of GTeX data, it is 
+**gtex_WHITE_12** data, which I renamed to **gtex_WHITE_QCed**.
+
+```{bash}
+
+$ plink --bfile gtex_WHITE_QCed --freq --out gtex_WHITE_QCed
+# this code creates a file named gtex_WHITE_QCed.frq 
+
+$ perl /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/1000Genomes_RefData/1000G_reference_panel/HRC-1000G-check-bim.pl -b  gtex_WHITE_QCed.bim -f  gtex_WHITE_QCed.frq -r /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/1000Genomes_RefData/1000G_reference_panel/HRC.r1-1.GRCh37.wgs.mac5.sites.tab -h
+# the above code creates a Run-plink.sh file, which you'll need to run next as 
+# shown below:
+
+
+$ sh Run-plink.sh
+
+```
+
+Running **Run-plink.sh** (on a linux system), will output bfiles  (1 per chromosome) in your working directory. These files have *"updated"* in their names. For instance, for gtex data, it would be something like **gtex_WHITE_QCed-updated-chr1** and so on.
+
+
+### *C. Convert bfiles to vcf format*
+
+```{bash}
+
+for i in {1..22};do
+plink --bfile gtex_WHITE_QCed-updated-chr$i --recode vcf --out gtex_WHITE-chr$i
+sed -i 1,6d gtex_WHITE-chr$i.vcf
+sed -i '1s/^/##fileformat=VCFv4.2\n/' gtex_WHITE-chr$i.vcf
+bgzip gtex_WHITE-chr$i.vcf
+done
+
+
+# copy the final output vcf files into a separate folder 
+cp -r gtex_WHITE-chr* /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/4_Ready_for_MIS.submission
+
+
+```
+
+### Imputation 
+
+```{bash}
+
+# manually submit to MIS
+
+ - login with your credentials (<https://imputationserver.sph.umich.edu/index.html#!run/minimac4>)
+ 
+ - click on the "Run" tab to start a new imputation job
+ - click on "Genotype Imputation (Minimac4)"
+ - name your job
+ - choose a ref.panel (The most accurate and largest panel is HRC (Version r1.1 2016))
+ - upload the vcf files (one per chromosome) from your computer
+ - select the build of your data, for gtex GRCh37/hg19 build was used
+ - choose "NO" rsq Filter
+ - select "Eagle v2.4" for Phasing
+ - set the Population (European for gtex)
+ - Start the job
+ 
+ 
+```
+
+
+### After Imputation Steps
+
+### *A. Download zip files with given code*
+
+```{bash}
+
+# 1) first define the path to the directory you wish to save imputed files in
+$ cd /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/5_Imputed
+
+
+# 2) download the imputed files 
+
+## either all at once using this curl code
+$ curl -sL https://imputationserver.sph.umich.edu/get/......./ | bash
+
+## or individually, using wget command like below
+$ wget https://imputationserver.sph.umich.edu/share/results/.../chr_1.zip
+
+$ wget https://imputationserver.sph.umich.edu/share/results/..../qcreport.html
+
+# 3) unzip the files using the password that's emailed to you 
+$ for i in {1..22};
+do unzip -P PASSWORD -o chr_$i.zip;
+done
+
+
+# 4) extract the index files for .vcf.gz files
+$ for i in {1..22}; do
+tabix -p vcf chr$i.dose.vcf.gz
+done
+
+
+```
+Note: The imputation outputs two files, one is chr$i.dose.vcf.gz, and the other
+is information file (i.e., chr$i.info.gz). are 
+
+### *B. Post imputation QC*
+
+
+
+```{bash}
+
+# step 1) First, remove SNPs that have low INFO score (Sqr). 
+# Vanessa used Sqr>0.9; though, in the literature and guidelines it's recommended
+# to use thresholds above 0.4, meaning to remove SNPs with Sqr<0.4 . 
+
+$ for i in {1..22}; do
+gzip -cd chr$i.info.gz | awk -F " " '($7<0.5) {print $1,$7}' > chr$i.ExcludeSNPs
+vcftools --gzvcf chr$i.dose.vcf.gz --exclude-positions chr$i.ExcludeSNPs --recode --out /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/6_Post-imputation_QC/1_Cleaning1/chr$i.clean1
+done
+
+
+# this code first writes a list of SNPs to be excluded. 
+# then, vcftools --exclude-positions is called to remove those SNPs.
+# the output files in this step are stored in the 
+# 6_Post-imputation_QC/1_Cleaning1 folder and are called chr$i.clean1
+
+
+```
+
+
+```{bash}
+
+# Step 2) Annotate--> change the position IDs into rSID
+
+# First convert .vcf files into zipped files (.vcf.gz) and index them
+cd /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/6_Post-imputation_QC/1_Cleaned
+
+for i in {1..22}; do
+bgzip -c chr${i}.clean1.recode.vcf > chr${i}.clean1.recode.vcf.gz
+tabix -p vcf chr${i}.clean1.recode.vcf.gz
+done
+
+
+# then, annotate
+
+#!/bin/bash
+
+#SBATCH --job-name=GTEX_annotation
+#SBATCH --cpus-per-task=12
+#SBATCH --mem-per-cpu=256000M
+#SBATCH --time=24:00:00
+#SBATCH --output=/external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/6_Post-imputation_QC/2_Annotated/ann.out
+#SBATCH --error=/external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/6_Post-imputation_QC/2_Annotated/ann.err
+
+for i in {1..22}; do
+bcftools annotate -c ID -Oz --collapse snps -a /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/1000Genomes_RefData/1000G_reference_panel/HRC.r1-1.GRCh37.wgs.mac5.sites.vcf.gz chr${i}.clean1.recode.vcf.gz > /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/6_Post-imputation_QC/2_Annotated/ann_chr${i}.vcf.gz                        
+done
+
+
+```
+
+
+```{bash}
+
+# Step 3) more clean up =>  remove double IDs and biallelic SNPs and make bfiles:
+
+# cleaning and making bfiles for each chromosome separately (per-chromosome): 
+
+$ cd /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/6_Post-imputation_QC/2_Annotated
+
+$ for i in {1..22}; do
+plink --vcf ann_chr${i}.vcf.gz --const-fid --biallelic-only strict list --make-bed --out /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/6_Post-imputation_QC/3_Cleaning2/ann_cleaned2_chr${i}
+done
+
+
+
+```
+
+
+```{bash}
+
+# Step 4) Actual QC step
+
+$ cd /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/6_Post-imputation_QC/3_Cleaning2
+
+
+$ for i in {1..22}; do
+plink --bfile ann_cleaned2_chr${i} --maf 0.05 --geno 0.1 --hwe 5e-7 --make-bed --out  /external/rprshnas01/netdata_kcni/stlab/Nickie/GTEX_V8/Genotype_Data/0_GTEX_ALL.White.Subjects/6_Post-imputation_QC/4_QCed/ann_QCed_chr${i} 
+done
+
+
+```
+
+
+This will generate a list of 22 quality-controlled PLINK binary file sets - one for each autosome.
+
+The complete data set still needs to be quality-controlled for subjects missing more than 10% of total imputed genotypes. If all the steps above have been successful, there should not be any such subjects. However, it is always good practice to check.
+
+It's worth noting that if the wgs files are not huge, it's easier to conctenate
+all vcf files and deal with 1 file instead of 22 files. Though, in most cases, as the files are super huge, it's much easier an faster to run the steps per chromosome. 
+
+If you could combine all per-chromosome data into one file, remember to do it 
+on .vcf.gz files, as merging bfiles in PLINK always returns errors. PLINK can not
+yet deal with the SNPs rSIDs on the same positions. If error happened (like starnds flipping, snps mismatch, etc.), is because PLINK is not yet suited to handling them, we recommend exporting that the data to VCF and merging them with another tool ( like *bcftools concat*).
+
+Congratulation, you have finished the process! The out put files of this script will serve building PRS scores.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

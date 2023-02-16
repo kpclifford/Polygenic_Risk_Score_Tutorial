@@ -1,0 +1,116 @@
+
+# GTEX Data Preprocessing
+
+#### Step 1) Decompress the data
+Due to the nature of donor consent agreement, raw data and attributes are not publicly available on the GTEx Portal. The approved users may download Genotype Calls (.vcf) for WGS via protected Access portal (<https://gtexportal.org/home/protectedDataAccess>). The downloaded data is zipped and tarred. use the following codes (Linux system) to decompress the files: 
+
+```{bash}
+
+$ cd /to/the/directory/where/the/genotypingData(.tar)/is/Kept
+
+$ tar -xvf GTEx_WGS.genotype-calls-vcf.c1.GRU.tar   # unstack the files
+
+```
+
+
+#### Step 2) overview the data
+
+To read its content, you can type:
+
+```{bash}
+
+$ gunzip -c GTEx_WGS.vcf.gz | head
+
+```
+which will display the first 10 lines of the file.
+
+
+To check subjects IDs, you can type:
+
+```{bash}
+
+$ bcftools query -l GTEx_WGS.vcf.gz
+
+```
+
+
+If you wish to work on a small subset of subjects/samples, you first need to make a list of those subjects IDs (.txt file, no header, no rownames), save this file in the directory where you keep the main wgs (.vcf.gz) file. Then run the code below to subset the wgs data (.vcf.gz):
+
+```{bash}
+
+$ module load  bio/BCFtools/1.9-foss-2018b 
+
+$ bcftools view -S SubjectsIDs.txt -Oz -o GTEx_WGS_White.subjects.vcf.gz Original_GTEx_WGS.vcf.gz
+
+# you can also generate the indies of this subset file using:
+$ tabix -p vcf GTEx_WGS_White.subjects.vcf.gz
+
+```
+
+
+#### Step 2) Convert genotypes call data (.vcf) to PLINK bfiles
+PLINK bfiles are as follows:
+  
+  - **.bed** : primary representation of genotype calls at biallelic variants. 
+  
+  - **.bim** : Extended variant information file with the following six fields:         a. Chromosome code (either an integer, or 'X'/'Y'/'XY'/'MT'; '0'       
+           indicates unknown) or name 
+        b. Variant identifier
+        c. Position in morgans or centimorgans (safe to use dummy value of '0')
+        d. Base-pair coordinate (1-based; limited to 231-2)
+        e. Allele 1 (corresponding to clear bits in .bed; usually minor)
+        f. Allele 2 (corresponding to set bits in .bed; usually major)
+  
+  - **.fam*** : Sample information,a text file with no header line, and one   
+        line per sample with the following six fields:
+        a. Family ID ('FID')
+        b. Within-family ID ('IID'; cannot be '0')
+        c. Within-family ID of father ('0' if father isn't in dataset)
+        d. Within-family ID of mother ('0' if mother isn't in dataset)
+        e. Sex code ('1' = male, '2' = female, '0' = unknown)
+        f. Phenotype value ('1' = control, '2' = case,'-9'/'0'--out/non-numeric            = missing data if case/control)
+
+Due to huge size of files, it's best if you practice allocating RAM before running the conversion command.
+
+```{bash}
+
+# Always set/check the working directory(pwd)
+$ cd /to/the/directory/where/the/genotypingData(.vcf.gz)/is/Kept
+
+```
+
+make sure the required modules are loaded:
+
+```{bash}
+
+$ module load bio/PLINK/1.90-beta5-foss-2018b
+$ module load R
+
+```
+
+Run the following commands:
+
+```{bash}
+
+#!/bin/bash
+
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=12
+#SBATCH --mem-per-cpu=16000M
+#SBATCH --time=12:00:00
+#SBATCH --job-name="gtex_wgs"
+#SBATCH --output=path/to/directory/gtex_wgs.out
+#SBATCH --error=path/to/directory/gtex_wgs.err  
+
+```
+
+Then run this line for conversion:
+
+```{bash}
+
+# Generate binary files                                        
+$ plink --vcf GTEx_WGS_White.subjects.vcf.gz --make-bed --out gtex_wgs_white   
+
+```
+
+The three bfiles (i.e., Bfile_wgs.bed, Bfile_wgs.bim, Bfile_wgs.fam) will be deposited into the same directory.

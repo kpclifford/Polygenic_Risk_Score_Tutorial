@@ -1,0 +1,23 @@
+# A guide to performing Polygenic Risk Score analyses
+
+## Background
+
+Genome-wide association studies have shown unequivocally that common complex disorders have a polygenic genetic architecture and have enabled researchers to identify genetic variants associated with diseases. These variants can be combined into a polygenic risk score that captures part of an individual’s susceptibility to diseases (Lewis, C.M., Vassos, E. Polygenic risk scores: from research tools to clinical instruments. Genome Med 12, 44 (2020). <https://doi.org/10.1186/s13073-020-00742-5>). 
+
+Despite the growing application and importance of PRS, there are limited comprehensive guidelines for performing PRS. This tutorial is a continuing work in progress, but I am excited to prepare this resource to get started with Genome Wide Association Studies. 
+
+This tutorial is broken down into six sections: 1) Data pre-processing, 2) quality control, 3) Imputation, 4) Annotation, 5) PRS construction, and 6) SNP Testing. 
+
+This pipeline uses the WGS data from GTEX projects (dbGaP-32731/ dbGaP Study Accession: phs000424.v9.p2/<https://gtexportal.org/home/datasets>); though, the scripts can be used as a template for analyzing any other data.
+
+Within this protocol, the following softwares are used: 
+• PLINK / PLINK2 
+• R
+
+All scripts are developed for UNIX/Linux computer resources, and all commands should be typed/pasted at the shell prompt.
+
+Throughout chapters, I have provided step-by-step guide to help researchers to complete these tutorials successfully. Underneath each section, references and extra resources have also been added 
+
+### An unnumbered section {-}
+
+Chapters and sections are numbered by default. To un-number a heading, add a `{.unnumbered}` or the shorter `{-}` at the end of the heading, like in this section.
