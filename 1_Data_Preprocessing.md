@@ -8,11 +8,13 @@ This file explains how to prepare the Whole genome sequencing data for the downs
 
 # Load modules
 
+```{bash}
 module load bio/VCFtools/0.1.14-foss-2018b-Perl-5.28.0
 module load bio/BCFtools/1.9-foss-2018b 
 module load bio/PLINK/1.90-beta5-foss-2018b
 module load bio/PLINK2/2.00-alpha3-x86_64
 module load R
+```
 
 ##########################################
 
@@ -24,17 +26,20 @@ module load R
 ## First use $ cd /path/to/directory/you/like/to/keep/untar/Data/
 
 ## to untar the file use:
+```{bash}
 $ tar -xvf path/to/vcf.tar OutputFileDirectroy/FileName.GRU.tar 
+```
 # The output will be something like FileName.vcf.gz
 
 #########################################
 
 ## Part B) Check Samples IDs in the WGS (.vcf.gz) data:
+```{bash}
 $ bcftools query -l FileName.vcf.gz
 
 #To save the list of samples IDs
 $ bcftools query -l FileName.vcf.gz > All_IDs.txt
-
+```
 
 ############################################
 
@@ -43,10 +48,12 @@ $ bcftools query -l FileName.vcf.gz > All_IDs.txt
 # Note: Use metdata to find the RACE information of GWAS subjects. The prepare a .txt file containing list of subjects (one per row)
 # that you wish to study. You can simply use R to do so. Here, my list is called White_IDs.txt, which contains the IDs (N=561) of Whit people in GTeX data. 
 
+```{bash}
 $ bcftools view -S White_IDs.txt -Oz -o White_subset_FileName.vcf.gz FileName.vcf.gz
 
 # Also, extrat the index file
 $ tabix -p vcf White_subset_FileName.vcf.gz
+```
 
 # Note: This file is still super huge and it helps if we define the RAM useage (shown below) before conversion task.
 
@@ -54,6 +61,7 @@ $ tabix -p vcf White_subset_FileName.vcf.gz
 
 ## Part D) Define the basic setups for RAM before the conversion task (vcf to bfile)
 
+```{bash}
 $ cd /to/the/folder/where/you/keep/White_subset_FileName.vcf.gz
 
 #!/bin/bash
@@ -69,9 +77,10 @@ $ cd /to/the/folder/where/you/keep/White_subset_FileName.vcf.gz
 $ plink --vcf White_subset_FileName.vcf.gz --make-bed --out GTeX_White  
 ## This code will convert a vcf genotype file into .bed+.fam+.bim files (PLINK bfiles).  
 
-##### Note: Instead of the above mentioned SBATCH steps you can simply use --memory flag of PLINK:
+## Note: Instead of the above mentioned SBATCH steps you can simply use --memory flag of PLINK:
 $ plink --memory 128000 --vcf White_subset_FileName.vcf.gz --make-bed --out GTeX_White 
 
+```
 
 ####### Now the data is ready for QC. 
 
