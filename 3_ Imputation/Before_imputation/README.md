@@ -10,10 +10,10 @@ GRCh37 or GRCh38 coordinates are required.
 
 To meet the abovementioned requirments, follow these steps: 
 
-                                                           1. Data preparation: Quality Control for HRC or 1000G 
+          1. Data preparation: Quality Control for HRC or 1000G 
                                                                                
-                                                           2. Create a frequency file
+          2. Create a frequency file
                      
-                                                           3. Generate per chromosome .vcf files
+          3. Generate per chromosome .vcf files
 
                                                     
