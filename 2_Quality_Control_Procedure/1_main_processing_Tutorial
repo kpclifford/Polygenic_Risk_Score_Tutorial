@@ -1,9 +1,8 @@
-####### Descriptive pipeline of GWA quality control approach       #######
+####### Descriptive pipeline of GWA quality control                #######
 ####### Author: Nickie Safarian                                    #######
 ####### Date: January 27, 2023                                     #######
 ##########################################################################
 
-# This tutorial uses freely available GTex (dbGaP Study Accession: phs000424.v9.p2) data obtained from https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs000424.v9.p2.
 # It is essential for the execution of the tutorial that all scripts belonging to this tutorial are in the same directory on your workstation.
 # Remember to keep a copy of your data binary files (.bed, .bim, .fam files) in the same directory. 
 # Simply copy-and-paste all commands from the *main_processing_Tutorial* into the Unix terminal.
