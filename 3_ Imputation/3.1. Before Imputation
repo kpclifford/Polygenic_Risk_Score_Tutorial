@@ -1,0 +1,80 @@
+
+# Michigan Imputation Server
+
+Michigan Imputation Server (MIS) accepts VCF files compressed with bgzip. 
+
+Please make sure the following requirements are met:
+
+   - Create a separate vcf.gz file for each chromosome.
+   - Variations must be sorted by genomic position.
+   - GRCh37 or GRCh38 coordinates are required.
+
+
+To meet the abovementioned requirments, follow the three steps explained below:                                                      
+
+### Step 1. Data preparation: Quality Control for HRC or 1000G
+Data preparation is well explained in this website: 
+[https://imputationserver.readthedocs.io/en/latest/prepare-your-data/]
+
+```{bash}
+
+# You are going to download two sets of data:
+
+# 1) Download Haplotype calls from "The Haplotype Reference Consortium" [http://www.haplotype-reference-consortium.org/site]
+
+$ wget ftp://ngs.sanger.ac.uk/production/hrc/HRC.r1-1/HRC.r1-1.GRCh37.wgs.mac5.sites.vcf.gz
+
+$ wget ftp://ngs.sanger.ac.uk/production/hrc/HRC.r1-1/HRC.r1-1.GRCh37.wgs.mac5.sites.tab.gz
+
+A README file that describes the contents of these files is available here: 
+$ wget ftp://ngs.sanger.ac.uk/production/hrc/HRC.r1-1/README
+ 
+#unzip
+$ gzip -d file.gz 
+gzip -d HRC.r1-1.GRCh37.wgs.mac5.sites.tab.gz
+ 
+ 
+ 
+#2) Download 1000G reference panel (it is needed for calculating Allele frequency; check this website: [https://www.well.ox.ac.uk/~wrayner/tools/]) 
+
+$ wget https://www.well.ox.ac.uk/~wrayner/tools/HRC-1000G-check-bim-v4.3.0.zip
+
+$ unzip HRC-1000G-check-bim-v4.3.0.zip 
+
+```
+
+### Step 2. Create a frequency file and execute scripts
+
+Please note that the output file from **2_Quality_Control_Procedure**, which is your QCed wgs data, is used for generating the frequency file. 
+
+Alos, note that you have to keep the *reference data* you downloaded in the previous step and the *QCed-wgs-data* in the same folder, or deine path to each data when running the code below. 
+
+```{bash}
+
+$ plink --bfile gtex_WHITE_Qced --freq --out GTeX_WHITE_QCed
+
+$ perl HRC-1000G-check-bim.pl -b  gtex_WHITE_Qced.bim -f  GTeX_WHITE_QCed.frq -r HRC.r1-1.GRCh37.wgs.mac5.sites.tab -h
+# the above code creates a **Run-plink.sh** file, that you'll need to run it next as follows:
+
+
+$ sh Run-plink.sh
+
+```
+The product of this step are *updated-per-chromosome* files that you will convert into .vcf format in the following step. 
+
+### Step 3. Create per chromosome .vcf file
+
+```{bash}
+
+for i in {1..22};do
+plink --bfile gtex_WHITE_Qced-updated-chr$i --recode vcf --out gtex_WHITE-chr$i
+sed -i 1,6d gtex_WHITE-chr$i.vcf
+sed -i '1s/^/##fileformat=VCFv4.2\n/' gtex_WHITE-chr$i.vcf
+bgzip gtex_WHITE-chr$i.vcf
+done
+
+```
+
+Copy the .vcf files generated (for the 22 chromosomes) in your local machine, in the next step you'll upload them to MIS. 
+
+
