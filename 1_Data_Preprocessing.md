@@ -15,24 +15,23 @@ module load bio/PLINK2/2.00-alpha3-x86_64
 module load R
 ```
 
-##########################################
-
-## Part A) Unstack the Data 
+## Step 1) Unstack the Data 
 
 The Downloaded GTeX Genotye Data (The file name that I have used is: GTEx_Analysis_2016-01-15_v7_WholeGenomeSeq_652Ind_GATK_HaplotypeCaller.vcf.gz)
 is stacked (i.e., is in .tar format) and needs to be Untared.
 
-### First use $ cd /path/to/directory/you/like/to/keep/untar/Data/
 
-### to untar the file use:
+
 ```{bash}
+## to untar the file use:
+$ cd /path/to/directory/you/like/to/keep/untar/Data/
 $ tar -xvf path/to/vcf.tar OutputFileDirectroy/FileName.GRU.tar 
 ```
 The output will be something like FileName.vcf.gz
 
-#########################################
 
-## Part B) Check Samples IDs in the WGS (.vcf.gz) data:
+
+## Step 2) Check Samples IDs in the WGS (.vcf.gz) data:
 
 ```{bash}
 $ bcftools query -l FileName.vcf.gz
@@ -41,9 +40,9 @@ $ bcftools query -l FileName.vcf.gz
 $ bcftools query -l FileName.vcf.gz > All_IDs.txt
 ```
 
-############################################
 
-## Part C) Subset the .vcf.gz file to get the desired subset of samples (here being the White subjects)
+
+## Step 3) Subset the .vcf.gz file to get the desired subset of samples (here being the White subjects)
 
 Note: Use metdata to find the RACE information of GWAS subjects. The prepare a .txt file containing list of subjects (one per row)
 that you wish to study. You can simply use R to do so. Here, my list is called White_IDs.txt, which contains the IDs (N=561) of Whit people in GTeX data. 
@@ -57,9 +56,9 @@ $ tabix -p vcf White_subset_FileName.vcf.gz
 
 Note: This file is still super huge and it helps if we define the RAM useage (shown below) before conversion task.
 
-#############################################
 
-## Part D) Define the basic setups for RAM before the conversion task (vcf to bfile)
+
+## Step 4) Define the basic setups for RAM before the conversion task (vcf to bfile)
 
 ```{bash}
 $ cd /to/the/folder/where/you/keep/White_subset_FileName.vcf.gz
