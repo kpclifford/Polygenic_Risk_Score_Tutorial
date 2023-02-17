@@ -5,7 +5,11 @@
 
 # General description and purpose
 
-This GitHub repo contains several tutorials on how to constrcut polygenic risk scores (PRS) using whole genome sequencing (wgs) data. A step-by-step guide is provided to help researcher succesfully run the analysis.  
+This GitHub repo contains several tutorials on how to constrcut polygenic risk scores (PRS) using whole genome sequencing (wgs) data.
+
+This tutorial uses GTex wgs data (dbGaP Study Accession: phs000424.v9.p2), obtained from https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs000424.v9.p2.
+
+A step-by-step guide is provided to help researcher succesfully run the analysis.  
 
 ## I have made decriptive files and codes avaiable for: 
 
