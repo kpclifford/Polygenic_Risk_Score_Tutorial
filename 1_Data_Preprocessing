@@ -66,10 +66,11 @@ $ cd /to/the/folder/where/you/keep/White_subset_FileName.vcf.gz
 #SBATCH --output= /path/to/file/directory/gtex_wgs.out
 #SBATCH --error= /path/to/file/directory/gtex_wgs.err       
 
-
-## Generate binary files (use plink to convert a vcf genotype file into .bed+.fam+.bim bfiles) 
 $ plink --vcf White_subset_FileName.vcf.gz --make-bed --out GTeX_White  
+## This code will convert a vcf genotype file into .bed+.fam+.bim files (PLINK bfiles).  
 
+##### Note: Instead of the above mentioned SBATCH steps you can simply use --memory flag of PLINK:
+$ plink --memory 128000 --vcf White_subset_FileName.vcf.gz --make-bed --out GTeX_White 
 
 
 ####### Now the data is ready for QC. 
