@@ -18,7 +18,7 @@ A step-by-step guide is provided to help researcher succesfully run the analysis
        2_Qulity_Control_Procedure: this folder contains all essential GWAS QC steps along with scripts for data visualization.
        
        3_ Imputation: data preparation before imputation, submission of an imputation jib to the Michigan Imputation srver 
-                      (<https://imputationserver.sph.umich.edu/index.html#!>), as well as post imputation QC procedure are explained.
+                      https://imputationserver.sph.umich.edu/index.html#!, as well as post imputation QC procedure are explained.
                       
        4_ Clumping:
        
