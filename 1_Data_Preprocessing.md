@@ -1,10 +1,9 @@
-####### Descriptive pipeline of GWA quality control approach       #######
-####### Author: Nickie Safarian                                    #######
-####### Date: January 20, 2023                                     #######
-##########################################################################
+#### Descriptive pipeline of GWA quality control approach       
+###### Author: Nickie Safarian                                    
+###### Date: January 20, 2023                                     
 
 
-This file explains how to prepare the Whole genome sequencing data for the downstream analysis: 
+Here I explain how to prepare a Whole genome sequencing data for the downstream analysis: 
 
 # Load modules
 
@@ -20,20 +19,21 @@ module load R
 
 ## Part A) Unstack the Data 
 
-# The Downloaded GTeX Genotye Data (The file name that I have used is: GTEx_Analysis_2016-01-15_v7_WholeGenomeSeq_652Ind_GATK_HaplotypeCaller.vcf.gz)
-# is stacked (i.e., is in .tar format) and needs to be Untared.
+The Downloaded GTeX Genotye Data (The file name that I have used is: GTEx_Analysis_2016-01-15_v7_WholeGenomeSeq_652Ind_GATK_HaplotypeCaller.vcf.gz)
+is stacked (i.e., is in .tar format) and needs to be Untared.
 
-## First use $ cd /path/to/directory/you/like/to/keep/untar/Data/
+### First use $ cd /path/to/directory/you/like/to/keep/untar/Data/
 
-## to untar the file use:
+### to untar the file use:
 ```{bash}
 $ tar -xvf path/to/vcf.tar OutputFileDirectroy/FileName.GRU.tar 
 ```
-# The output will be something like FileName.vcf.gz
+The output will be something like FileName.vcf.gz
 
 #########################################
 
 ## Part B) Check Samples IDs in the WGS (.vcf.gz) data:
+
 ```{bash}
 $ bcftools query -l FileName.vcf.gz
 
@@ -45,8 +45,8 @@ $ bcftools query -l FileName.vcf.gz > All_IDs.txt
 
 ## Part C) Subset the .vcf.gz file to get the desired subset of samples (here being the White subjects)
 
-# Note: Use metdata to find the RACE information of GWAS subjects. The prepare a .txt file containing list of subjects (one per row)
-# that you wish to study. You can simply use R to do so. Here, my list is called White_IDs.txt, which contains the IDs (N=561) of Whit people in GTeX data. 
+Note: Use metdata to find the RACE information of GWAS subjects. The prepare a .txt file containing list of subjects (one per row)
+that you wish to study. You can simply use R to do so. Here, my list is called White_IDs.txt, which contains the IDs (N=561) of Whit people in GTeX data. 
 
 ```{bash}
 $ bcftools view -S White_IDs.txt -Oz -o White_subset_FileName.vcf.gz FileName.vcf.gz
@@ -55,7 +55,7 @@ $ bcftools view -S White_IDs.txt -Oz -o White_subset_FileName.vcf.gz FileName.vc
 $ tabix -p vcf White_subset_FileName.vcf.gz
 ```
 
-# Note: This file is still super huge and it helps if we define the RAM useage (shown below) before conversion task.
+Note: This file is still super huge and it helps if we define the RAM useage (shown below) before conversion task.
 
 #############################################
 
@@ -82,5 +82,5 @@ $ plink --memory 128000 --vcf White_subset_FileName.vcf.gz --make-bed --out GTeX
 
 ```
 
-####### Now the data is ready for QC. 
+#### Now the data is ready for QC. 
 
