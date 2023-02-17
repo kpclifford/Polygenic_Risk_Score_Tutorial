@@ -1,6 +1,0 @@
-
-Genotype imputation is a process of estimating missing genotypes from the haplotype or genotype reference panel.
-
-It can effectively boost the power of detecting single nucleotide polymorphisms (SNPs) in genome-wide association studies (GWAS).
-
-It's widely used in GWASs to find novel risk alleles or do fine-mapping to get a high-resolution view of the likelihood of identified causal variants.
