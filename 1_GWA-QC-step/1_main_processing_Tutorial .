@@ -1,10 +1,10 @@
 ####### Descriptive pipeline of GWA quality control approach       #######
-#######  Author: Nickie Safarian                                   #######
+####### Author: Nickie Safarian                                   #######
 ####### Date: January 27, 2023                                     #######
 ##########################################################################
 
 # This tutorial uses freely available GTex (dbGaP Study Accession: phs000424.v9.p2) data obtained from https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs000424.v9.p2.
-# It is essential for the execution of the tutorial that that all scripts belonging to this tutorial are in the same directory on your workstation.
+# It is essential for the execution of the tutorial that all scripts belonging to this tutorial are in the same directory on your workstation.
 # Remember to keep a copy of your data binary files (.bed, .bim, .fam files) in the same directory. 
 # Simply copy-and-paste all commands from the *main_processing_Tutorial* into the Unix terminal.
 # For a thorough theoretical explanation of all QC steps please read https://www.ncbi.nlm.nih.gov/pubmed/29484742.
@@ -13,39 +13,15 @@
 ############################################################## START ANALISIS ##############################################################
 ## Part A) First load the required modules in your linux workstation
 $ module load bio/VCFtools/0.1.14-foss-2018b-Perl-5.28.0
-$ module load  bio/BCFtools/1.9-foss-2018b 
+$ module load bio/BCFtools/1.9-foss-2018b 
 $ module load bio/PLINK/1.90-beta5-foss-2018b
 $ module load R
 
+## Note: always check the version of modules as they are subject to updates. The ones above are the current (2023) versions on the CAMH SCC (cluster computer).
 #----------------------------------------------------------------------------------------------------------------
-## Part B) Data Preprocessing
-# The Downloaded GTeX Genotye Data is stacked (i.e., is in .tar format) and needs to be Untared
+## Part B) Quality Control (QC) Steps:
 
-# First use $cd /path/to/directory/you/like/to/keep/untar/Data/
-# Then use $tar -xvf path/to/.tarFileDirectroy/FileName-vcf.c1.GRU.tar 
-# Note: This file is super huge so in the next step we'll define the RAM useage.
-
-#-----------------------------------------------------------------------------------------------------------------
-## Part C) Define the basic setups for RAM before the conversion task (vcf to bfile)
-
-$ cd /external/rprshnas01/netdata_kcni/stlab/....
-
-#!/bin/bash
-
-#SBATCH --nodes=1
-#SBATCH --cpus-per-task=12
-#SBATCH --mem-per-cpu=64000M
-#SBATCH --time=12:00:00
-#SBATCH --job-name="GTeX_WGS"
-#SBATCH --output=/external/rprshnas01/netdata_kcni/stlab/.../gtex_wgs.out
-#SBATCH --error=/external/rprshnas01/netdata_kcni/stlab/.../gtex_wgs.err       
-
-## Generate binary files (# we use plink to convert a vcf genotype file into .bed+.fam+.bim (bfiles))                                    
-$ plink --vcf GTEx_Analysis_2016-01-15_v7_WholeGenomeSeq_652Ind_GATK_HaplotypeCaller.vcf.gz --make-bed --out GTeX_BA9_White  
-
-
-#-----------------------------------------------------------------------------------------------------------------------
-## Part D) Quality Control (QC) Steps:
+### The starting bfiles are called: GTEX_BA9_White.bed, GTEX_BA9_White.fam, GTEX_BA9_White.bim 
 
 ### Step 1) Investigate missingness per individual and per SNP and make histograms.
 
@@ -59,52 +35,58 @@ $ plink --vcf GTEx_Analysis_2016-01-15_v7_WholeGenomeSeq_652Ind_GATK_HaplotypeCa
 #SBATCH --output=/external/rprshnas01/netdata_kcni/stlab.../gtex_QC.out
 #SBATCH --error=/external/rprshnas01/netdata_kcni/stlab/.../gtex_QC.err       
 
-$ plink --memory 128000 --bfile GTEX_BA9_White2 --missing --out FileName  ---> FileName.imiss .lmiss
-
+$ plink --memory 128000 --bfile GTEX_BA9_White --missing 
 # output: plink.imiss and plink.lmiss, these files show respectively the proportion of missing SNPs per individual and the proportion of missing individuals per SNP.
 
+# Note: if you use the --out flag at the end of the abovementioned code (like: $ plink --memory 128000 --bfile GTEX_BA9_White --missing --out FileName), 
+# plink will generate the missingness reports with that name (like: FileName.imiss and FileName.lmiss). In that case, remember to update the
+# data-read line of codes in the hist_miss.R script before plotting.
 
 # Generate plots to visualize the missingness results.
-Rscript --no-save hist_miss.R
+$ Rscript --no-save hist_miss.R
 
 # Delete SNPs and individuals with high levels of missingness.
 # The following two QC commands will not remove any SNPs or individuals. However, it is good practice to start the QC with these non-stringent thresholds.  
 # Delete SNPs with missingness >0.2.
-plink --memory 128000 --bfile GTEX_BA9_White --geno 0.2 --make-bed --out GTEX_BA9_White_2
+$ plink --memory 128000 --bfile GTEX_BA9_White --geno 0.2 --make-bed --out GTEX_BA9_White_2
 
 # Delete individuals with missingness >0.2.
-plink --memory 128000 --bfile GTEX_BA9_White_2 --mind 0.2 --make-bed --out GTEX_BA9_White_3
+$ plink --memory 128000 --bfile GTEX_BA9_White_2 --mind 0.2 --make-bed --out GTEX_BA9_White_3
 
 # Delete SNPs with missingness >0.02.
-plink --memory 128000 --bfile GTEX_BA9_White_3 --geno 0.02 --make-bed --out GTEX_BA9_White_4
+$ plink --memory 128000 --bfile GTEX_BA9_White_3 --geno 0.02 --make-bed --out GTEX_BA9_White_4
 
 # Delete individuals with missingness >0.02.
-plink --memory 128000 --bfile GTEX_BA9_White_4 --mind 0.02 --make-bed --out GTEX_BA9_White_5
+$ plink --memory 128000 --bfile GTEX_BA9_White_4 --mind 0.02 --make-bed --out GTEX_BA9_White_5
 
 ###################################################################
 
 ### Step 2) Check discordant sex information
-# Subjects who were a priori determined as females must have a F value of <0.2, and subjects who were a priori determined as males must have a F value >0.8.
+# Subjects who were a priori determined as females must have a F value of <0.2, and 
+# subjects who were a priori determined as males must have a F value >0.8.
 # This F value is based on the X chromosome inbreeding (homozygosity) estimate.
 # Subjects who do not fulfil these requirements are flagged "PROBLEM" by PLINK.
 
-plink --memory 128000 --bfile GTEX_BA9_White_5 --check-sex --out sample_sex
+$ plink --memory 128000 --bfile GTEX_BA9_White_5 --check-sex --out sample_sex
 
 # Generate plots to visualize the sex-check results.
-Rscript --no-save gender_check.R
+$ Rscript --no-save gender_check.R
 
-# These checks indicate that there is one woman with a sex discrepancy, F value of 0.99. (When using other datasets often a few discrepancies will be found). 
+# If you see a good separation of samples (with females cluster on the left side, values below 0.2, and males cluster
+# on the right side of the plot, values above 0.8) the samples/data is fine. Even if the F stats of some of the samples 
+# is a bit off (like below 0.78 for males or -0.02 for females) it's fine as long as you see the samples dicotomy. The problematic 
+# samples violate the sex discrepancy role too much. like a female with an F value of 0.99. 
 
 # The following two scripts can be used to deal with individuals with a sex discrepancy.
 # Note, please use one of the two options below to generate the bfile FileNAME_6, this file we will use in the next step of this tutorial.
 
-# 1) Delete individuals with sex discrepancy.
+# 1) Either, delete individuals with sex discrepancy.
 grep "PROBLEM" plink.sexcheck| awk '{print$1,$2}'> sex_discrepancy.txt
 # This command generates a list of individuals with the status “PROBLEM”.
 plink --bfile FileNAME_5 --remove sex_discrepancy.txt --make-bed --out FileNAME_6 
 # This command removes the list of individuals with the status “PROBLEM”.
 
-# 2) impute-sex.
+# 2) Or, impute-sex.
 plink --bfile FileNAME_5 --impute-sex --make-bed --out FileNAME_6
 # This imputes the sex based on the genotype information into your data set.
 
@@ -112,58 +94,61 @@ plink --bfile FileNAME_5 --impute-sex --make-bed --out FileNAME_6
 ### Step 3) Generate a bfile with autosomal SNPs only and delete SNPs with a low minor allele frequency (MAF).
 
 # Select autosomal SNPs only (i.e., from chromosomes 1 to 22).
-$ awk '{ if ($1 >= 1 && $1 <= 22) print $2 }' GTEX_BA9_White_5.bim > snp_1_22.txt
-$ plink --bfile GTEX_BA9_White_5 --extract snp_1_22.txt --make-bed --out GTEX_BA9_White_6
+$ awk '{ if ($1 >= 1 && $1 <= 22) print $2 }' GTEX_BA9_White_6.bim > snp_1_22.txt
+$ plink --bfile GTEX_BA9_White_6 --extract snp_1_22.txt --make-bed --out GTEX_BA9_White_7
 
 
 # Generate a plot of the MAF distribution.
-$ plink --bfile GTEX_BA9_White_6 --freq --out MAF_check
+$ plink --bfile GTEX_BA9_White_7 --freq --out MAF_check
 $ Rscript --no-save MAF_check.R
 
 # Remove SNPs with a low MAF frequency.
-$ plink --memory 128000 --bfile GTEX_BA9_White_6 --maf 0.05 --make-bed --out GTEX_BA9_White_7
+$ plink --memory 128000 --bfile GTEX_BA9_White_7 --maf 0.05 --make-bed --out GTEX_BA9_White_8
 
-# N=???? SNPs are left
-# A conventional MAF threshold for a regular GWAS is between 0.01 or 0.05, depending on sample size.
+# N=????  check how many SNPs are left
+# A conventional MAF threshold for a regular GWAS is between 0.01 or 0.05, depending on the sample size.
 
 ####################################################
 
 ### Step 4) Delete SNPs which are not in Hardy-Weinberg equilibrium (HWE).
 # Check the distribution of HWE p-values of all SNPs.
 
-$ plink --memory 128000 --bfile GTEX_BA9_White_7 --hardy
+$ plink --memory 128000 --bfile GTEX_BA9_White_8 --hardy
 
-# Selecting SNPs with HWE p-value below 0.00001, required for one of the two plot generated by the next Rscript, allows to zoom in on strongly deviating SNPs. 
+# Selecting SNPs with HWE p-value below 0.00001, required for one of the two plot generated by the next Rscript, allows to 
+# zoom in on strongly deviating SNPs. 
 
 $ awk '{ if ($9 <0.00001) print $0 }' plink.hwe>plinkzoomhwe.hwe
 $ Rscript --no-save hwe.R
 
 # By default the --hwe option in plink only filters for controls.
 # Therefore, we use two steps, first we use a stringent HWE threshold for controls, followed by a less stringent threshold for the case data.
-$ plink --memory 128000 --bfile GTEX_BA9_White_7 --hwe 1e-6 --make-bed --out GTEX_BA9_White_7_hwe_filter_step1
+$ plink --memory 128000 --bfile GTEX_BA9_White_8 --hwe 1e-6 --make-bed --out GTEX_BA9_White_8_hwe_filter_step1
 
 # The HWE threshold for the cases filters out only SNPs which deviate extremely from HWE. 
 # This second HWE step only focusses on cases because in the controls all SNPs with a HWE p-value < hwe 1e-6 were already removed
-$ plink --memory 128000 --bfile GTEX_BA9_White_7_hwe_filter_step1 --hwe 1e-10 --hwe-all --make-bed --out GTEX_BA9_White_8
+$ plink --memory 128000 --bfile GTEX_BA9_White_8_hwe_filter_step1 --hwe 1e-10 --hwe-all --make-bed --out GTEX_BA9_White_9
 
 ############################################################
 ### step 5) Generate a plot of the distribution of the heterozygosity rate of your subjects.
 # And remove individuals with a heterozygosity rate deviating more than 3 sd from the mean.
 
 # Checks for heterozygosity are performed on a set of SNPs which are not highly correlated.
-# Therefore, to generate a list of non-(highly)correlated SNPs, we exclude high inversion regions (inversion.txt [High LD regions]) and prune the SNPs using the command --indep-pairwise’.
+# Therefore, to generate a list of non-(highly)correlated SNPs, we exclude high inversion regions (inversion.txt [High LD regions]) and 
+# prune the SNPs using the command --indep-pairwise’.
 
-# The parameters ‘50 5 0.2’ stand respectively for: the window size, the number of SNPs to shift the window at each step, and the multiple correlation coefficient for a SNP being regressed on all other SNPs simultaneously.
+# The parameters ‘50 5 0.2’ stand respectively for: the window size, the number of SNPs to shift the window at each step, and the 
+# multiple correlation coefficient for a SNP being regressed on all other SNPs simultaneously.
 
-$ plink --memory 128000 --bfile GTEX_BA9_White_8 --exclude inversion.txt --range --indep-pairwise 50 5 0.2 --out indepSNP
+$ plink --memory 128000 --bfile GTEX_BA9_White_9 --exclude inversion.txt --range --indep-pairwise 50 5 0.2 --out indepSNP
 
 # Note, don't delete the file indepSNP.prune.in, we will use this file in later steps of the tutorial.
 
-$ plink --memory 128000 --bfile GTEX_BA9_White_8 --extract indepSNP.prune.in --het --out R_check
+$ plink --memory 128000 --bfile GTEX_BA9_White_9 --extract indepSNP.prune.in --het --out R_check
 # This file contains your pruned data set.
 
 # Plot of the heterozygosity rate distribution
-$Rscript --no-save check_heterozygosity_rate.R
+$ Rscript --no-save check_heterozygosity_rate.R
 
 # The following code generates a list of individuals who deviate more than 3 standard deviations from the heterozygosity rate mean.
 # For data manipulation we recommend using UNIX. However, when performing statistical calculations R might be more convenient, hence the use of the Rscript for this step:
@@ -175,14 +160,14 @@ $ Rscript --no-save heterozygosity_outliers_list.R
 $ sed 's/"// g' fail-het-qc.txt | awk '{print$1, $2}'> het_fail_ind.txt
 
 # Remove heterozygosity rate outliers.
-$ plink --memory 128000 --bfile GTEX_BA9_White_8 --remove het_fail_ind.txt --make-bed --out GTEX_BA9_White_9
+$ plink --memory 128000 --bfile GTEX_BA9_White_9 --remove het_fail_ind.txt --make-bed --out GTEX_BA9_White_10
 
 ################################################################################
 ### step 6) It is essential to check datasets you analyse for cryptic relatedness.
 # Assuming a random population sample we are going to exclude all individuals above the pihat threshold of 0.2 in this tutorial.
 
 # Check for relationships between individuals with a pihat > 0.2.
-$ plink --memory 128000 --bfile GTEX_BA9_White_9 --extract indepSNP.prune.in --genome --min 0.2 --out pihat_min0.2
+$ plink --memory 128000 --bfile GTEX_BA9_White_10 --extract indepSNP.prune.in --genome --min 0.2 --out pihat_min0.2
 
 # The HapMap dataset is known to contain parent-offspring relations. 
 # The following commands will visualize specifically these parent-offspring relations, using the z values. 
@@ -196,36 +181,32 @@ $ Rscript --no-save Relatedness.R
 # In this tutorial, we aim to remove all 'relatedness' from our dataset.
 # To demonstrate that the majority of the relatedness was due to parent-offspring we only include founders (individuals without parents in the dataset).
 
-$ plink --bfile GTEX_BA9_White_9 --filter-founders --make-bed --out GTEX_BA9_White_10
+$ plink --bfile GTEX_BA9_White_10 --filter-founders --make-bed --out GTEX_BA9_White_11
 
 # Now we will look again for individuals with a pihat >0.2.
-$ plink --bfile GTEX_BA9_White_10 --extract indepSNP.prune.in --genome --min 0.2 --out pihat_min0.2_in_founders
-
+$ plink --bfile GTEX_BA9_White_11 --extract indepSNP.prune.in --genome --min 0.2 --out pihat_min0.2_in_founders
 
 
 # The file 'pihat_min0.2_in_founders.genome' shows that, after exclusion of all non-founders, No individual pair with a pihat greater than 0.2 remains in the GTEX data.
 
-# This is likely to be a full sib or DZ twin pair based on the Z values. Noteworthy, they were not given the same family identity (FID) in the HapMap data.
-
 # For each pair of 'related' individuals with a pihat > 0.2, we recommend to remove the individual with the lowest call rate. 
-$ plink --bfile GTEX_BA9_White_10 --missing
+$ plink --bfile GTEX_BA9_White_11 --missing
 
 # Use an UNIX text editor (e.g., vi(m) ) to check which individual has the highest call rate in the 'related pair'. 
 
 # Generate a list of FID and IID of the individual(s) with a Pihat above 0.2, to check who had the lower call rate of the pair.
-# In our dataset the individual 13291  NA07045 had the lower call rate.
-vi 0.2_low_call_rate_pihat.txt
-i 
-13291  NA07045
-# Press esc on keyboard!
-:x
-# Press enter on keyboard
+
+# The two indviduals with a Pihat above 0.2 in GTeX data are:
+  IID      N_MISS  N_Geno    F_MISS
+GTEX-P44H    6356  6928749   0.0009173
+GTEX-XOTO    2639  6928749   0.0003809
+
 # In case of multiple 'related' pairs, the list generated above can be extended using the same method as for our lone 'related' pair.
 
 # Delete the individuals with the lowest call rate in 'related' pairs with a pihat > 0.2 
-$ plink --bfile GTEX_BA9_White_10 --remove 0.2_low_call_rate_pihat.txt --make-bed --out GTEX_BA9_White_11
+$ plink --bfile GTEX_BA9_White_11 --remove 0.2_low_call_rate_pihat.txt --make-bed --out GTEX_BA9_White_12
 
 
 
 
-#######################CONGRATULATION, YOU ARE DONE!!!!!!!!!!!
+#######################CONGRATULATION, YOU ARE DONE with the data QC!!!!!!!!!!!
