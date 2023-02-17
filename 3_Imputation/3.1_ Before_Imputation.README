@@ -1,0 +1,11 @@
+## Steps Before Imputation: 
+
+There three major steps before you sumit aan imputation job:
+
+         1. Data preparation: Quality Control for HRC or 1000G Pre-imputation
+         2. Create a frequency file and execute scripts
+         3. Create vcf files
+
+
+
+
