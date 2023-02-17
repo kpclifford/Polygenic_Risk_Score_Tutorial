@@ -1,4 +1,4 @@
-#### Descriptive pipeline of GWA quality control approach       
+#### Descriptive pipeline for GWA quality control       
 ###### Author: Nickie Safarian                                    
 ###### Date: January 20, 2023                                     
 
