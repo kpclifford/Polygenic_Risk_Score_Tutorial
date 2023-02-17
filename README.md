@@ -2,11 +2,11 @@
 Author: Nickie Safarian
 Date: December 2022
 
-General description and purpose
+# General description and purpose
 
 This GitHub repo contains several tutorials on how to constrcut polygenic risk scores (PRS) using whole genome sequencing (wgs) data. A step-by-step guide is provided to help researcher succesfully run the analysis.  
 
-I have made decriptive files and codes avaiable for: 
+## I have made decriptive files and codes avaiable for: 
 
        1_Data_pre-processing: steps for prepapring the PLINK binary files for a desired subset of wgs data are explained. 
 
@@ -23,8 +23,3 @@ I have made decriptive files and codes avaiable for:
        
        7_Regression Analysis and Ploting:
                                     
-                                        
-![image](https://user-images.githubusercontent.com/102309428/219742931-be39d820-1d7f-4c06-b02b-6fcdbce3e948.png)
-
-
-
