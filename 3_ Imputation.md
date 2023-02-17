@@ -16,8 +16,9 @@ and cons in terms of speed and accuracy.
 
 
 ### Imputation servers are already available at 
-https://imputation.sanger.ac.uk/
-https://imputationserver.sph.umich.edu/
+
+#https://imputation.sanger.ac.uk/
+#https://imputationserver.sph.umich.edu/
 
 
 ### Reference Panels
