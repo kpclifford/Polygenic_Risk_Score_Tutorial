@@ -1,9 +1,28 @@
-#### Descriptive pipeline for GWA quality control       
-###### Author: Nickie Safarian                                    
+#### Descriptive pipeline for preprocessing genotype data  
+
+###### Author: Nickie Safarian      
+
 ###### Date: January 20, 2023                                     
 
 
-Here I explain how to prepare a Whole genome sequencing data for the downstream analysis: 
+
+# Data formats
+
+Almost all the high-throughput sequencing data you will deal with should arrive in just a few different formats. I'll only focus on the the most important ones: **FASTA, FASTQ, SAM, BAM, and VCF**. 
+
+![DataFormats](https://user-images.githubusercontent.com/102309428/219771087-fa1761ce-bc20-4365-bf44-7e2a11be3d21.PNG) 
+
+
+The FASTQ format is the standard format for lightly-processed data coming off an Illumina machine.
+
+A major task in bioinformatics is aligning reads from a sequencing machine to a reference genome.The Sequence Alignment Map (SAM file format represents the results of sequence alignment. The SAM files can end up being enormous text files. The originators of the SAM format dealt with this by also specifying and creating a compressed binary (meaning “not composed of text”) format to store all the information in a SAM file. This is called a BAM (Binary Alignment Map) file.
+
+Variant Call Format or VCF data are defined in terms of differences between the sequence carried by an individual and the genome sequence as it is listed in the reference genome. *The GTeX genotype data that I have used in this tutorial is in VCF format*. 
+
+You may read more about data formats on this website [https://eriqande.github.io/eca-bioinf-handbook/bioinformatic-file-formats.html#the-bam-format]
+
+
+below I explain how to process a .vcf data for the downstream analysis: 
 
 # Load modules
 
