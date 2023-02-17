@@ -40,8 +40,8 @@ Michigan imputation server (MIS) offers imputation from the several reference pa
 ### Workflow 
 There are three phases:
 
-                       1.Before imputation, 
-                       2. imputation job submission, 
+                       1. Before imputation, 
+                       2. Imputation job submission, 
                        3. Post-imputation QC, 
                        
 that I will explain in this folder.
