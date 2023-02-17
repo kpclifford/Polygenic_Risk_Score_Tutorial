@@ -1,6 +1,6 @@
-# Before Imputation
+# Michigan Imputation Server
 
-Michigan Imputation Server accepts VCF files compressed with bgzip. 
+Michigan Imputation Server (MIS) accepts VCF files compressed with bgzip. 
 
 Please make sure the following requirements are met:
 
